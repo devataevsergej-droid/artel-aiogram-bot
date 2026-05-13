@@ -1,23 +1,51 @@
-﻿from aiogram import Router, types
+from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
+from aiogram.fsm.context import FSMContext
+
 from keyboards import main_menu_kb
-from database import get_user_field
+from database import get_user_field, upsert_user, add_loyalty_score_db
+from states import NameForm
 
 router = Router(name="start")
 
 @router.message(CommandStart())
-async def cmd_start(message: types.Message):
-    uid = message.from_user.id
-    name = get_user_field(uid, "name")
-    
-    if name and name not in [None, "None", "Друг"]:
-        text = f"🧭 {name}, рад видеть снова!\n\n🔥 Смотри, что сейчас дарят:"
-        await message.answer(text, reply_markup=main_menu_kb())
-    else:
-        await message.answer(
-            "👋 Привет! Я Штурман Art.El.\n\n"
-            "Как мне к тебе обращаться? (напиши имя)"
-        )
+async def cmd_start(message: types.Message, state: FSMContext):
+    """
+    Всегда спрашивает имя при заходе, 
+    даже если в базе что-то есть.
+    """
+    await state.clear()
+    await message.answer(
+        "👋 Привет! Я Штурман мастерской четырёх стихий Art.El.\n\n"
+        "Как я могу к тебе обращаться? (напиши имя)"
+    )
+    await state.set_state(NameForm.waiting_for_name)
+
+@router.message(NameForm.waiting_for_name)
+async def process_name(message: types.Message, state: FSMContext):
+    name = message.text.strip()
+    if not name or len(name) < 2:
+        await message.answer("Пожалуйста, напиши имя (хотя бы 2 символа)")
+        return
+
+    user_id = message.from_user.id
+    username = message.from_user.username
+
+    # Сохраняем/обновляем пользователя в Supabase
+    upsert_user(user_id, username, name)
+
+    # Начисляем 5 баллов за заполнение имени
+    add_loyalty_score_db(user_id, 5)
+
+    await state.clear()
+
+    await message.answer(
+        f"🎁 Отлично, <b>{name}</b>! У меня для тебя приятные новости:\n\n"
+        "🎟️ Скидка <b>5%</b> уже активна (твой ранг: Новичок)\n"
+        "🕯️ И сувенир к первому заказу!\n\n"
+        "👇 Смотри, что сейчас дарят по-настоящему:",
+        reply_markup=main_menu_kb()
+    )
 
 @router.message(Command("ping"))
 async def cmd_ping(message: types.Message):
