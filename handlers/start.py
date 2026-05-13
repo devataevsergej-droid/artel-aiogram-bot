@@ -56,16 +56,17 @@ async def cmd_ping(message: types.Message):
 
 @router.message(Command("test_admin"))
 async def test_admin_command(message: types.Message):
-    user_id = message.from_user.id
-    if user_id != config.ADMIN_ID:
+    # Проверка админа через config (config уже импортирован ранее)
+    if message.from_user.id != 558864284:  # Твой ADMIN_ID
         await message.reply("⛔ Только для админа.")
         return
     
     await message.reply("🔍 Проверяю доступ к админ-группе...")
     
     try:
-        await bot.send_message(
-            chat_id=config.ADMIN_GROUP_ID,
+        # Используем message.bot, который всегда доступен
+        await message.bot.send_message(
+            chat_id=-1003894573982,  # Твой ADMIN_GROUP_ID
             text="✅ Тестовое сообщение от бота. Доступ есть!"
         )
         await message.reply("✅ Успешно! Уведомление отправлено в админ-группу.")
