@@ -47,7 +47,7 @@ async def process_name(message: types.Message, state: FSMContext):
         "🎟️ Скидка <b>5%</b> уже активна (твой ранг: Новичок)\n"
         f"🕯️ И сувенир к первому заказу!{bonus_text}\n\n"
         "👇 <b>Смотри, что сейчас дарят по-настоящему:</b>",
-        reply_markup=main_menu_kb()
+        reply_markup=main_menu_kb(), parse_mode="HTML"
     )
 
 @router.message(Command("ping"))
