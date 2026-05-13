@@ -12,31 +12,41 @@ router = Router(name="start")
 async def cmd_start(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        "👋 Привет! Я Штурман мастерской четырёх стихий Art.El.\n\n"
-        "Как я могу к тебе обращаться? (напиши имя)"
+        "👋 Привет! Я — Штурман мастерской Art.El.\n\n"
+        "Как я могу к тебе обращаться? (просто напиши имя)"
     )
     await state.set_state(NameForm.waiting_for_name)
 
 @router.message(NameForm.waiting_for_name)
 async def process_name(message: types.Message, state: FSMContext):
     name = message.text.strip()
+    
     if not name or len(name) < 2:
-        await message.answer("Пожалуйста, напиши имя (хотя бы 2 символа)")
+        await message.answer(
+            "Как я могу к тебе обращаться?\n"
+            "Напиши своё имя, пожалуйста 😊"
+        )
         return
 
     user_id = message.from_user.id
     username = message.from_user.username
+    existing_score = await get_user_field(user_id, 'loyalty_score') or 0
 
     await upsert_user(user_id, username, name)
-    await add_loyalty_score_db(user_id, 5)
+
+    if existing_score == 0:
+        await add_loyalty_score_db(user_id, 5)
+        bonus_text = "\n\n⭐ +5 баллов за знакомство!"
+    else:
+        bonus_text = ""
 
     await state.clear()
 
     await message.answer(
         f"🎁 Отлично, <b>{name}</b>! У меня для тебя приятные новости:\n\n"
         "🎟️ Скидка <b>5%</b> уже активна (твой ранг: Новичок)\n"
-        "🕯️ И сувенир к первому заказу!\n\n"
-        "👇 Смотри, что сейчас дарят по-настоящему:",
+        f"🕯️ И сувенир к первому заказу!{bonus_text}\n\n"
+        "👇 <b>Смотри, что сейчас дарят по-настоящему:</b>",
         reply_markup=main_menu_kb()
     )
 
