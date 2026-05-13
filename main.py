@@ -13,33 +13,29 @@ from handlers import register_all_handlers
 
 logging.basicConfig(level=logging.INFO)
 
-# Флаг для ОДНОКРАТНОЙ отправки уведомления
-notification_sent = False
+# === ФЛАГ ДЛЯ ОДНОКРАТНОЙ ОТПРАВКИ ===
+startup_notified = False
 
-# === ОБРАБОТЧИК ВЕБХУКА (С УВЕДОМЛЕНИЕМ) ===
-async def handle_webhook(request):
-    global notification_sent
+# === ОСНОВНОЙ ОБРАБОТЧИК ВЕБХУКА ===
+async def webhook_handler(request):
+    global startup_notified
     
-    # Отправляем уведомление ПРИ ПЕРВОМ обращении к вебхуку
-    if not notification_sent:
+    # Отправляем уведомление при первом обращении к вебхуку
+    if not startup_notified:
         try:
             await bot.send_message(
                 chat_id=-1003894573982,
                 text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук активен\n✅ Бот принимает запросы",
                 parse_mode="HTML"
             )
-            notification_sent = True
+            startup_notified = True
             logging.info("✅ Уведомление отправлено через вебхук")
         except Exception as e:
-            logging.error(f"❌ Ошибка отправки: {e}")
+            logging.error(f"❌ Ошибка: {e}")
     
-    # Передаём запрос в aiogram
+    # Передаём запрос дальше
     handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     return await handler.handle(request)
-
-# === ВСПОМОГАТЕЛЬНЫЕ ОБРАБОТЧИКИ ===
-async def handle_root(request):
-    return web.Response(text="Bot is running", status=200)
 
 async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
@@ -53,9 +49,15 @@ def main():
     register_all_handlers(dp)
     
     app = web.Application()
-    app.router.add_post("/webhook", handle_webhook)  # <--- ВЕБХУК С УВЕДОМЛЕНИЕМ
-    app.router.add_get("/", handle_root)
-    app.router.add_get("/health", handle_root)
+    
+    # Регистрируем обработчик вебхука
+    app.router.add_post("/webhook", webhook_handler)
+    
+    # Health check
+    async def health(request):
+        return web.Response(text="OK", status=200)
+    app.router.add_get("/", health)
+    app.router.add_get("/health", health)
     
     setup_application(app, dp, bot=bot)
     
