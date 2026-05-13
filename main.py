@@ -12,6 +12,15 @@ logging.basicConfig(level=logging.INFO)
 async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
     logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
+    
+    # Уведомление админу о запуске
+    try:
+        await bot.send_message(
+            chat_id=config.ADMIN_GROUP_ID,
+            text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук установлен\n✅ Планировщики активны"
+        )
+    except:
+        pass
 
 async def on_shutdown(bot: Bot):
     await bot.delete_webhook()
