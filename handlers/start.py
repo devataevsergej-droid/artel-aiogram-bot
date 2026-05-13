@@ -1,6 +1,3 @@
-from main import bot
-from config import config
-
 from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
