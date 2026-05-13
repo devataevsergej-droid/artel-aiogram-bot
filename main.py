@@ -1,39 +1,42 @@
-﻿import os
+import os
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 
 from config import config
+
+# ========== 1. СНАЧАЛА СОЗДАЁМ bot И dp ==========
+bot = Bot(token=config.BOT_TOKEN)
+dp = Dispatcher()
+
+# ========== 2. ПОТОМ ИМПОРТИРУЕМ handlers ==========
 from handlers import register_all_handlers
 
+# ========== 3. НАСТРАИВАЕМ ЛОГИРОВАНИЕ ==========
 logging.basicConfig(level=logging.INFO)
 
+# ========== 4. ФУНКЦИИ ЗАПУСКА И ОСТАНОВКИ ==========
 async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
-    logging.info(f"Webhook установлен: {config.WEBHOOK_URL}/webhook")
-    
-    # Диагностика: проверим, какое значение ADMIN_GROUP_ID
-    logging.info(f"DEBUG: ADMIN_GROUP_ID = {config.ADMIN_GROUP_ID}")
-    logging.info(f"DEBUG: тип ADMIN_GROUP_ID = {type(config.ADMIN_GROUP_ID)}")
+    logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
     
     # Уведомление админу
     try:
         await bot.send_message(
             chat_id=config.ADMIN_GROUP_ID,
-            text="🚀 Бот запущен и готов к работе!\n\n✅ Вебхук установлен\n✅ Планировщики активны"
+            text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук установлен\n✅ Планировщики активны",
+            parse_mode="HTML"
         )
-        logging.info("✅ Уведомление админу отправлено успешно!")
     except Exception as e:
-        logging.error(f"❌ Ошибка при отправке уведомления: {e}")
+        logging.error(f"Не удалось отправить уведомление: {e}")
 
 async def on_shutdown(bot: Bot):
     await bot.delete_webhook()
     logging.info("Webhook удалён")
 
+# ========== 5. ГЛАВНАЯ ФУНКЦИЯ ==========
 def main():
-    bot = Bot(token=config.BOT_TOKEN)
-    dp = Dispatcher()
     register_all_handlers(dp)
     
     app = web.Application()
