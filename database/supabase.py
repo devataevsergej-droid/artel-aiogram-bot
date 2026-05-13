@@ -39,3 +39,19 @@ async def add_loyalty_score_db(user_id: int, points: int):
     url = f"{config.SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}"
     async with httpx.AsyncClient() as client:
         await client.patch(url, json={"loyalty_score": new_score}, headers=HEADERS)
+
+async def log_action(user_id: int, action: str):
+    """Записывает действие пользователя в таблицу logs"""
+    url = f"{config.SUPABASE_URL}/rest/v1/logs"
+    headers = {
+        "apikey": config.SUPABASE_KEY,
+        "Authorization": f"Bearer {config.SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+    }
+    data = {
+        "user_id": str(user_id),
+        "action": action
+    }
+    async with httpx.AsyncClient() as client:
+        await client.post(url, json=data, headers=headers)
