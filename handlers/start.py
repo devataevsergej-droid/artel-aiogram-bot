@@ -4,16 +4,12 @@ from aiogram.fsm.context import FSMContext
 
 from keyboards.menu import main_menu_kb
 from database.supabase import get_user_field, upsert_user, add_loyalty_score_db
-from states.profile import NameForm
+from utils.states import NameForm
 
 router = Router(name="start")
 
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
-    """
-    Всегда спрашивает имя при заходе, 
-    даже если в базе что-то есть.
-    """
     await state.clear()
     await message.answer(
         "👋 Привет! Я Штурман мастерской четырёх стихий Art.El.\n\n"
@@ -31,11 +27,8 @@ async def process_name(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     username = message.from_user.username
 
-    # Сохраняем/обновляем пользователя в Supabase
-    upsert_user(user_id, username, name)
-
-    # Начисляем 5 баллов за заполнение имени
-    add_loyalty_score_db(user_id, 5)
+    await upsert_user(user_id, username, name)
+    await add_loyalty_score_db(user_id, 5)
 
     await state.clear()
 
