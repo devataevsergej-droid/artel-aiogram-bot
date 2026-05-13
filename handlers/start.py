@@ -10,6 +10,9 @@ router = Router(name="start")
 
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
+    # Логируем запуск
+    await log_action(message.from_user.id, "start")
+    
     await state.clear()
     await message.answer(
         "👋 Привет! Я — Штурман мастерской Art.El.\n\n"
