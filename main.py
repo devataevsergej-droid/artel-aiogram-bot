@@ -11,19 +11,21 @@ logging.basicConfig(level=logging.INFO)
 
 async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
-    logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
-
-    # Отладка: проверим, какое значение ADMIN_GROUP_ID
-    logging.info(f"ADMIN_GROUP_ID = {config.ADMIN_GROUP_ID}")
+    logging.info(f"Webhook установлен: {config.WEBHOOK_URL}/webhook")
     
-    # Уведомление админу о запуске
+    # Диагностика: проверим, какое значение ADMIN_GROUP_ID
+    logging.info(f"DEBUG: ADMIN_GROUP_ID = {config.ADMIN_GROUP_ID}")
+    logging.info(f"DEBUG: тип ADMIN_GROUP_ID = {type(config.ADMIN_GROUP_ID)}")
+    
+    # Уведомление админу
     try:
         await bot.send_message(
             chat_id=config.ADMIN_GROUP_ID,
-            text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук установлен\n✅ Планировщики активны"
+            text="🚀 Бот запущен и готов к работе!\n\n✅ Вебхук установлен\n✅ Планировщики активны"
         )
-    except:
-        pass
+        logging.info("✅ Уведомление админу отправлено успешно!")
+    except Exception as e:
+        logging.error(f"❌ Ошибка при отправке уведомления: {e}")
 
 async def on_shutdown(bot: Bot):
     await bot.delete_webhook()
