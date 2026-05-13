@@ -2,9 +2,9 @@ from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from keyboards import main_menu_kb
-from database import get_user_field, upsert_user, add_loyalty_score_db
-from states import NameForm
+from keyboards.menu import main_menu_kb
+from database.supabase import get_user_field, upsert_user, add_loyalty_score_db
+from states.profile import NameForm
 
 router = Router(name="start")
 
