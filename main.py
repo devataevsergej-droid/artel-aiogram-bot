@@ -21,15 +21,16 @@ async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
     logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
     
-    # Уведомление админу
+    # Уведомление админу (рабочий код из test_admin)
     try:
         await bot.send_message(
-            chat_id=config.ADMIN_GROUP_ID,
+            chat_id=-1003894573982,  # Твой ADMIN_GROUP_ID
             text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук установлен\n✅ Планировщики активны",
             parse_mode="HTML"
         )
+        logging.info("✅ Уведомление админу отправлено успешно!")
     except Exception as e:
-        logging.error(f"Не удалось отправить уведомление: {e}")
+        logging.error(f"❌ Ошибка при отправке уведомления: {e}")
 
 async def on_shutdown(bot: Bot):
     await bot.delete_webhook()
