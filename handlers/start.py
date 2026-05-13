@@ -3,7 +3,8 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
 from keyboards.menu import main_menu_kb
-from database.supabase import get_user_field, upsert_user, add_loyalty_score_db
+
+from database.supabase import get_user_field, upsert_user, add_loyalty_score_db, log_action  # <--- ДОБАВИЛИ log_action
 from utils.states import NameForm
 
 router = Router(name="start")
