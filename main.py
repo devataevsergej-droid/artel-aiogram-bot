@@ -6,38 +6,40 @@ from aiohttp import web
 
 from config import config
 
-# ========== 1. СОЗДАЁМ bot И dp ==========
+# === ПРЯМОЙ ВЫВОД В ЛОГИ ДЛЯ ПРОВЕРКИ ===
+print("🚀 ФАЙЛ main.py НАЧАЛ ЗАГРУЖАТЬСЯ!")
+# =======================================
+
+# Создаём bot и dp
 bot = Bot(token=config.BOT_TOKEN)
 dp = Dispatcher()
 
-# ========== 2. ИМПОРТИРУЕМ handlers ==========
 from handlers import register_all_handlers
 
-# ========== 3. НАСТРАИВАЕМ ЛОГИРОВАНИЕ ==========
 logging.basicConfig(level=logging.INFO)
 
-# ========== 4. ФУНКЦИЯ ЗАПУСКА (С УВЕДОМЛЕНИЕМ) ==========
 async def on_startup(bot: Bot):
+    print("✅ ФУНКЦИЯ on_startup ВЫЗВАНА!") # <-- ЭТО ВАЖНОЕ СООБЩЕНИЕ
+    
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
     logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
     
-    # Уведомление админу в группу
+    # Отправляем уведомление
     try:
         await bot.send_message(
-            chat_id=-1003894573982,  # ADMIN_GROUP_ID
-            text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук установлен\n✅ Планировщики активны",
-            parse_mode="HTML"
+            chat_id=-1003894573982,
+            text="🚀 Бот запущен и готов к работе!\n\n✅ Вебхук установлен\n✅ Планировщики активны"
         )
+        print("✅ Уведомление АДМИНУ УСПЕШНО ОТПРАВЛЕНО!") # <-- ЭТО ВАЖНОЕ СООБЩЕНИЕ
         logging.info("✅ Уведомление админу отправлено успешно!")
     except Exception as e:
+        print(f"❌ ОШИБКА при отправке: {e}") # <-- ЭТО ВАЖНОЕ СООБЩЕНИЕ
         logging.error(f"❌ Ошибка при отправке уведомления: {e}")
 
-# ========== 5. ФУНКЦИЯ ОСТАНОВКИ ==========
 async def on_shutdown(bot: Bot):
     await bot.delete_webhook()
     logging.info("Webhook удалён")
 
-# ========== 6. ГЛАВНАЯ ФУНКЦИЯ ==========
 def main():
     register_all_handlers(dp)
     
