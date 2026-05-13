@@ -55,3 +55,12 @@ async def log_action(user_id: int, action: str):
     }
     async with httpx.AsyncClient() as client:
         await client.post(url, json=data, headers=headers)
+
+async def get_user_rank(user_id: int):
+    """Получает ранг и баллы пользователя"""
+    url = f"{config.SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}&select=loyalty_rank,loyalty_score"
+    async with httpx.AsyncClient() as client:
+        r = await client.get(url, headers=HEADERS)
+        if r.status_code == 200 and r.json():
+            return r.json()[0]
+    return {"loyalty_rank": "Новичок", "loyalty_score": 0}
