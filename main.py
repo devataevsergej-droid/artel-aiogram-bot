@@ -12,6 +12,9 @@ logging.basicConfig(level=logging.INFO)
 async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
     logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
+
+    # Отладка: проверим, какое значение ADMIN_GROUP_ID
+    logging.info(f"ADMIN_GROUP_ID = {config.ADMIN_GROUP_ID}")
     
     # Уведомление админу о запуске
     try:
