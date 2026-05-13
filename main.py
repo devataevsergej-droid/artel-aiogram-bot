@@ -13,27 +13,8 @@ from handlers import register_all_handlers
 
 logging.basicConfig(level=logging.INFO)
 
-# === ФЛАГ ДЛЯ ОДНОКРАТНОЙ ОТПРАВКИ ===
-startup_notified = False
-
-# === ОСНОВНОЙ ОБРАБОТЧИК ВЕБХУКА ===
+# === ОБРАБОТЧИК ВЕБХУКА (БЕЗ УВЕДОМЛЕНИЯ) ===
 async def webhook_handler(request):
-    global startup_notified
-    
-    # Отправляем уведомление при первом обращении к вебхуку
-    if not startup_notified:
-        try:
-            await bot.send_message(
-                chat_id=-1003894573982,
-                text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук активен\n✅ Бот принимает запросы",
-                parse_mode="HTML"
-            )
-            startup_notified = True
-            logging.info("✅ Уведомление отправлено через вебхук")
-        except Exception as e:
-            logging.error(f"❌ Ошибка: {e}")
-    
-    # Передаём запрос дальше
     handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     return await handler.handle(request)
 
@@ -49,11 +30,8 @@ def main():
     register_all_handlers(dp)
     
     app = web.Application()
-    
-    # Регистрируем обработчик вебхука
     app.router.add_post("/webhook", webhook_handler)
     
-    # Health check
     async def health(request):
         return web.Response(text="OK", status=200)
     app.router.add_get("/", health)
