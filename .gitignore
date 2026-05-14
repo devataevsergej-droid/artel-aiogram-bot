@@ -25,3 +25,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Exported data (автоочистка Supabase)
+*.csv
+*.xlsx
+temp/
+tmp/
