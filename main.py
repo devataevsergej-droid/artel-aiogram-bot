@@ -13,11 +13,6 @@ from handlers import register_all_handlers
 
 logging.basicConfig(level=logging.INFO)
 
-# === ОБРАБОТЧИК ВЕБХУКА (БЕЗ УВЕДОМЛЕНИЯ) ===
-async def webhook_handler(request):
-    handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
-    return await handler.handle(request)
-
 async def on_startup(bot: Bot):
     await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
     logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
@@ -30,13 +25,8 @@ def main():
     register_all_handlers(dp)
     
     app = web.Application()
-    app.router.add_post("/webhook", webhook_handler)
-    
-    async def health(request):
-        return web.Response(text="OK", status=200)
-    app.router.add_get("/", health)
-    app.router.add_get("/health", health)
-    
+    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
+    webhook_requests_handler.register(app, path="/webhook")
     setup_application(app, dp, bot=bot)
     
     port = int(os.environ.get("PORT", 10000))
