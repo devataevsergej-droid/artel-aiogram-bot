@@ -1,1 +1,1 @@
-﻿from .supabase_client import supabase, get_user_field, update_user_field, add_loyalty_score
+from .supabase_client import supabase, get_user_field, update_user_field, add_loyalty_score, upsert_user
