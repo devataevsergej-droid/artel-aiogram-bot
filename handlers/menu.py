@@ -37,3 +37,8 @@ async def quiz(callback: types.CallbackQuery):
 
 def register_menu_handlers(dp):
     dp.include_router(router)
+
+@router.callback_query(lambda c: c.data == "profile")
+async def temp_profile(callback: types.CallbackQuery):
+    await callback.message.answer("✅ Временный профиль. Если это сообщение пришло — кнопка работает!")
+    await callback.answer()
