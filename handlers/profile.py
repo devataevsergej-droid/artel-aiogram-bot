@@ -6,7 +6,6 @@ from database.supabase import get_user_field
 router = Router(name="profile")
 
 def get_progress_bar(score: int, next_score: int) -> str:
-    """Возвращает текстовый прогресс-бар (10 символов)"""
     if next_score <= 0:
         return "█" * 10
     filled = int(10 * score / next_score)
@@ -16,12 +15,10 @@ def get_progress_bar(score: int, next_score: int) -> str:
 async def show_profile(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     
-    # Получаем данные пользователя
     name = await get_user_field(user_id, "name") or "Друг"
     rank = await get_user_field(user_id, "loyalty_rank") or "Новичок"
     score = await get_user_field(user_id, "loyalty_score") or 0
     
-    # Пороги рангов
     rank_thresholds = {
         "Новичок": 0,
         "Путник": 500,
@@ -32,7 +29,6 @@ async def show_profile(callback: types.CallbackQuery):
         "Легенда": 10000
     }
     
-    # Находим следующий ранг
     next_rank = None
     next_score = 0
     for r, s in rank_thresholds.items():
@@ -43,15 +39,15 @@ async def show_profile(callback: types.CallbackQuery):
     
     if next_rank:
         progress_bar = get_progress_bar(score, next_score)
-        progress_text = f"\n\n⭐ До ранга **{next_rank}** осталось **{next_score - score}** баллов\n{progress_bar} {score}/{next_score}"
+        progress_text = f"\n\n⭐ До ранга <b>{next_rank}</b> осталось <b>{next_score - score}</b> баллов\n{progress_bar} {score}/{next_score}"
     else:
-        progress_text = "\n\n🏆 Вы достигли **высшего ранга**! Поздравляем!"
+        progress_text = "\n\n🏆 Вы достигли <b>высшего ранга</b>! Поздравляем!"
     
     text = (
-        f"👤 **ЛИЧНЫЙ КАБИНЕТ**\n\n"
+        f"👤 <b>ЛИЧНЫЙ КАБИНЕТ</b>\n\n"
         f"👋 Привет, {name}!\n"
-        f"🏆 Ранг: **{rank}**\n"
-        f"⭐ Баллы: **{score}**{progress_text}\n\n"
+        f"🏆 Ранг: <b>{rank}</b>\n"
+        f"⭐ Баллы: <b>{score}</b>{progress_text}\n\n"
         "👇 Доступные разделы:"
     )
     
@@ -63,5 +59,5 @@ async def show_profile(callback: types.CallbackQuery):
         [InlineKeyboardButton(text="◀️ В главное меню", callback_data="back_to_main")]
     ])
     
-    await callback.message.edit_text(text, reply_markup=kb, parse_mode="Markdown")
+    await callback.message.answer(text, reply_markup=kb, parse_mode="HTML")
     await callback.answer()
