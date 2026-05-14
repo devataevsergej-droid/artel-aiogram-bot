@@ -10,12 +10,23 @@ router = Router(name="start")
 
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
-    await state.clear()
-    await message.answer(
-        "👋 Привет! Я — Штурман мастерской Art.El.\n\n"
-        "Как я могу к тебе обращаться? (просто напиши имя)"
-    )
-    await state.set_state(NameForm.waiting_for_name)
+    # Проверяем, есть ли имя в базе
+    user_id = message.from_user.id
+    name = await get_user_field(user_id, "name")
+    
+    if name and name not in [None, "None", "Друг"]:
+        # Уже знакомы — сразу в меню
+        await message.answer(
+            f"🧭 {name}, рад видеть снова!\n\n🔥 Смотри, что сейчас дарят:",
+            reply_markup=main_menu_kb()
+        )
+    else:
+        # Новый пользователь — спрашиваем имя
+        await state.set_state(NameForm.waiting_for_name)
+        await message.answer(
+            "👋 Привет! Я — Штурман мастерской Art.El.\n\n"
+            "Как я могу к тебе обращаться? (просто напиши имя)"
+        )
 
 @router.message(NameForm.waiting_for_name)
 async def process_name(message: types.Message, state: FSMContext):
@@ -32,10 +43,10 @@ async def process_name(message: types.Message, state: FSMContext):
     username = message.from_user.username
     existing_score = await get_user_field(user_id, 'loyalty_score') or 0
 
+    # Сохраняем имя
     await upsert_user(user_id, username, name)
-    from database import add_loyalty_score
-    add_loyalty_score(user_id, 5)
 
+    # Начисляем баллы ТОЛЬКО если их ещё не было
     if existing_score == 0:
         await add_loyalty_score_db(user_id, 5)
         bonus_text = "\n\n⭐ +5 баллов за знакомство!"
@@ -49,7 +60,8 @@ async def process_name(message: types.Message, state: FSMContext):
         "🎟️ Скидка <b>5%</b> уже активна (твой ранг: Новичок)\n"
         f"🕯️ И сувенир к первому заказу!{bonus_text}\n\n"
         "👇 <b>Смотри, что сейчас дарят по-настоящему:</b>",
-        reply_markup=main_menu_kb(), parse_mode="HTML"
+        reply_markup=main_menu_kb(),
+        parse_mode="HTML"
     )
 
 @router.message(Command("ping"))
@@ -58,17 +70,15 @@ async def cmd_ping(message: types.Message):
 
 @router.message(Command("test_admin"))
 async def test_admin_command(message: types.Message):
-    # Проверка админа через config (config уже импортирован ранее)
-    if message.from_user.id != 558864284:  # Твой ADMIN_ID
+    if message.from_user.id != 558864284:
         await message.reply("⛔ Только для админа.")
         return
     
     await message.reply("🔍 Проверяю доступ к админ-группе...")
     
     try:
-        # Используем message.bot, который всегда доступен
         await message.bot.send_message(
-            chat_id=-1003894573982,  # Твой ADMIN_GROUP_ID
+            chat_id=-1003894573982,
             text="✅ Тестовое сообщение от бота. Доступ есть!"
         )
         await message.reply("✅ Успешно! Уведомление отправлено в админ-группу.")
