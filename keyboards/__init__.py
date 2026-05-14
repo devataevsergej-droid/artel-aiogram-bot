@@ -1,17 +1,16 @@
-﻿from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import config
 
-def main_menu_kb() -> InlineKeyboardMarkup:
-    kb = InlineKeyboardMarkup(row_width=1)
-    kb.add(
-        InlineKeyboardButton("🔥 Смотреть подарки", callback_data="bonus"),
-        InlineKeyboardButton("👥 Личный кабинет", callback_data="profile"),
-        InlineKeyboardButton("🎬 Конкурс", callback_data="contest"),
-        InlineKeyboardButton("📢 Канал", url=config.CHANNEL_URL)
-    )
+def main_menu_kb():
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔥 Посмотреть, что сейчас дарят", callback_data="bonus")],
+        [InlineKeyboardButton(text="👥 Личный кабинет", callback_data="profile")],
+        [InlineKeyboardButton(text="🏆 Доска почёта (ТОП-10)", callback_data="top_referrals")],
+        [InlineKeyboardButton(text="📢 Канал Art.El", url=config.CHANNEL_URL)]
+    ])
     return kb
 
-def back_to_main_kb() -> InlineKeyboardMarkup:
+def back_to_main_kb():
     kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton("◀️ В главное меню", callback_data="back_to_main"))
+    kb.add(InlineKeyboardButton(text="◀️ В главное меню", callback_data="back_to_main"))
     return kb
