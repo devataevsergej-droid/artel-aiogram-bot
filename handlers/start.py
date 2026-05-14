@@ -39,6 +39,7 @@ async def process_name(message: types.Message, state: FSMContext):
     await upsert_user(user_id, username, name)
 
     if existing_score == 0:
+        print(f"🔍 Начисляю 5 баллов пользователю {user_id}")
         await add_loyalty_score_db(user_id, 5)
         bonus_text = "\n\n⭐ +5 баллов за знакомство!"
     else:
