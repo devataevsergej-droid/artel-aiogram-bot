@@ -6,46 +6,47 @@ from aiohttp import web
 
 from config import config
 
-# ========== 1. СОЗДАЁМ bot И dp ==========
+# ========== 1. НАСТРОЙКИ ==========
+logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.BOT_TOKEN)
 dp = Dispatcher()
 
-# ========== 2. ИМПОРТИРУЕМ handlers ==========
 from handlers import register_all_handlers
+register_all_handlers(dp)
 
-# ========== 3. НАСТРАИВАЕМ ЛОГИРОВАНИЕ ==========
-logging.basicConfig(level=logging.INFO)
+# ========== 2. ОБРАБОТЧИКИ ВЕБХУКА И HEALTHCHECK ==========
+async def handle_webhook(request):
+    """Принимает запросы от Telegram."""
+    handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
+    return await handler.handle(request)
 
-# ========== 4. ФУНКЦИЯ ЗАПУСКА (С РАБОЧИМ УВЕДОМЛЕНИЕМ) ==========
+async def health_check(request):
+    """Просто отвечает OK, чтобы Render не ругался."""
+    return web.Response(text="OK", status=200)
+
+# ========== 3. ФУНКЦИИ ЗАПУСКА И ОСТАНОВКИ ==========
 async def on_startup(bot: Bot):
-    await bot.set_webhook(f"{config.WEBHOOK_URL}/webhook")
-    logging.info(f"Webhook: {config.WEBHOOK_URL}/webhook")
-    
-    # УВЕДОМЛЕНИЕ АДМИНУ (РАБОЧИЙ КОД ИЗ /test_admin)
-    try:
-        await bot.send_message(
-            chat_id=-1003894573982,  # ADMIN_GROUP_ID
-            text="🚀 <b>Бот запущен и готов к работе!</b>\n\n✅ Вебхук установлен\n✅ Планировщики активны",
-            parse_mode="HTML"
-        )
-        logging.info("✅ Уведомление админу отправлено успешно!")
-    except Exception as e:
-        logging.error(f"❌ Ошибка при отправке уведомления: {e}")
+    """Устанавливает вебхук при старте бота."""
+    webhook_url = f"{config.WEBHOOK_URL}/webhook"
+    await bot.set_webhook(webhook_url)
+    logging.info(f"✅ Вебхук установлен: {webhook_url}")
 
-# ========== 5. ФУНКЦИЯ ОСТАНОВКИ ==========
 async def on_shutdown(bot: Bot):
+    """Удаляет вебхук при остановке."""
     await bot.delete_webhook()
-    logging.info("Webhook удалён")
+    logging.info("❌ Вебхук удалён")
 
-# ========== 6. ГЛАВНАЯ ФУНКЦИЯ ==========
+# ========== 4. ЗАПУСК ПРИЛОЖЕНИЯ ==========
 def main():
-    register_all_handlers(dp)
-    
     app = web.Application()
-    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
-    webhook_requests_handler.register(app, path="/webhook")
+    app.router.add_post("/webhook", handle_webhook)  # Главный путь для Telegram
+    app.router.add_get("/", health_check)           # Для Render
+    app.router.add_get("/health", health_check)     # Для Render
+
+    # Связываем бота с приложением
     setup_application(app, dp, bot=bot)
-    
+
+    # Запускаем сервер
     port = int(os.environ.get("PORT", 10000))
     web.run_app(app, host="0.0.0.0", port=port)
 
