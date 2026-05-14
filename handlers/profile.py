@@ -3,6 +3,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from database.supabase import get_user_field
 
+
 router = Router(name="profile")
 
 def get_progress_bar(score: int, next_score: int) -> str:
