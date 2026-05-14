@@ -33,6 +33,8 @@ async def process_name(message: types.Message, state: FSMContext):
     existing_score = await get_user_field(user_id, 'loyalty_score') or 0
 
     await upsert_user(user_id, username, name)
+    from database import add_loyalty_score
+    add_loyalty_score(user_id, 5)
 
     if existing_score == 0:
         await add_loyalty_score_db(user_id, 5)
