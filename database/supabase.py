@@ -34,11 +34,29 @@ async def upsert_user(user_id: int, username: str, name: str):
         await client.post(url, json=data, headers=headers)
 
 async def add_loyalty_score_db(user_id: int, points: int):
-    current = await get_user_field(user_id, 'loyalty_score') or 0
-    new_score = current + points
-    url = f"{config.SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}"
-    async with httpx.AsyncClient() as client:
-        await client.patch(url, json={"loyalty_score": new_score}, headers=HEADERS)
+    """Начислить баллы пользователю"""
+    try:
+        # Получаем текущие баллы
+        url_get = f"{config.SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}&select=loyalty_score"
+        async with httpx.AsyncClient() as client:
+            r = await client.get(url_get, headers=HEADERS)
+            if r.status_code == 200 and r.json():
+                current_score = r.json()[0].get("loyalty_score", 0)
+            else:
+                current_score = 0
+        
+        new_score = current_score + points
+        
+        # Обновляем баллы
+        url_patch = f"{config.SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}"
+        async with httpx.AsyncClient() as client:
+            await client.patch(url_patch, json={"loyalty_score": new_score}, headers=HEADERS)
+        
+        print(f"✅ Начислено {points} баллов пользователю {user_id}. Теперь: {new_score}")
+        return new_score
+    except Exception as e:
+        print(f"❌ Ошибка начисления баллов: {e}")
+        return None
 
 async def log_action(user_id: int, action: str):
     """Записывает действие пользователя в таблицу logs"""
